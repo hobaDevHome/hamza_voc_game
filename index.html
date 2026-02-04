@@ -419,38 +419,34 @@
             });
         }
 
-        function selectAnswer(selected, correct, button) {
-            // Mark as answered
-            answeredQuestions.add(currentIndex);
-
-            const allButtons = document.querySelectorAll('.choice-btn');
-            
-            // Disable all buttons
-            allButtons.forEach(btn => {
-                btn.style.cursor = 'default';
-                btn.onclick = null;
-            });
-
-            // Show correct/wrong
-            if (selected === correct) {
-                button.classList.add('correct');
-            } else {
-                button.classList.add('wrong');
-                // Highlight the correct answer
-                allButtons.forEach(btn => {
-                    if (btn.textContent === correct) {
-                        btn.classList.add('correct');
-                    }
-                });
-            }
-
-            // Check if all questions completed
-            if (answeredQuestions.size === shuffledWords.length) {
-                setTimeout(() => {
-                    document.getElementById('completionMsg').classList.add('show');
-                }, 500);
-            }
+  function selectAnswer(selected, correct, button) {
+    if (selected === correct) {
+        // Mark as answered
+        answeredQuestions.add(currentIndex);
+        
+        const allButtons = document.querySelectorAll('.choice-btn');
+        
+        // Disable all buttons
+        allButtons.forEach(btn => {
+            btn.style.cursor = 'default';
+            btn.onclick = null;
+        });
+        
+        button.classList.add('correct');
+        
+        // Check if all questions completed
+        if (answeredQuestions.size === shuffledWords.length) {
+            setTimeout(() => {
+                document.getElementById('completionMsg').classList.add('show');
+            }, 500);
         }
+    } else {
+        // Wrong answer - just show red, let them try again
+        button.classList.add('wrong');
+        button.style.cursor = 'default';
+        button.onclick = null;
+    }
+}
 
         function navigateListen(direction) {
             const newIndex = currentIndex + direction;
