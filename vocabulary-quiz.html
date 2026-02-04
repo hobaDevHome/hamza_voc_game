@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocabulary Quiz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .mode-selection {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px 25px;
+            background: #f0f0f0;
+            border: 3px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .mode-btn:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+
+        .mode-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #764ba2;
+        }
+
+        .quiz-container {
+            display: none;
+        }
+
+        .quiz-container.active {
+            display: block;
+        }
+
+        .counter {
+            text-align: center;
+            font-size: 18px;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .question-box {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 25px;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .question-text {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .replay-btn {
+            background: #764ba2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .replay-btn:hover {
+            background: #5f3a82;
+            transform: scale(1.05);
+        }
+
+        .choices {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .choice-btn {
+            padding: 20px;
+            background: #f0f0f0;
+            border: 3px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .choice-btn:hover:not(.correct):not(.wrong) {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+            border-color: #667eea;
+        }
+
+        .choice-btn.correct {
+            background: #4caf50;
+            color: white;
+            border-color: #2e7d32;
+        }
+
+        .choice-btn.wrong {
+            background: #f44336;
+            color: white;
+            border-color: #c62828;
+        }
+
+        .navigation {
+            display: flex;
+            gap: 15px;
+            justify-content: space-between;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 15px 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .completion-message {
+            background: #4caf50;
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .completion-message.show {
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+
+            .mode-btn {
+                min-width: 100%;
+            }
+
+            .choices {
+                grid-template-columns: 1fr;
+            }
+
+            .question-text {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 Vocabulary Quiz</h1>
+        
+        <div class="mode-selection">
+            <button class="mode-btn" onclick="selectMode('listen')">
+                🎧 Listen to Word
+            </button>
+            <button class="mode-btn" onclick="selectMode('quiz')">
+                🎯 Listen & Choose
+            </button>
+        </div>
+
+        <!-- Listen Mode -->
+        <div id="listenMode" class="quiz-container">
+            <div class="counter" id="listenCounter"></div>
+            <div class="question-box">
+                <div class="question-text" id="listenWord"></div>
+                <button class="replay-btn" onclick="replayAudio()">
+                    🔊 Replay
+                </button>
+            </div>
+            <div class="navigation">
+                <button class="nav-btn" id="listenPrev" onclick="navigateListen(-1)">⬅️ Previous</button>
+                <button class="nav-btn" id="listenNext" onclick="navigateListen(1)">Next ➡️</button>
+            </div>
+        </div>
+
+        <!-- Quiz Mode -->
+        <div id="quizMode" class="quiz-container">
+            <div class="counter" id="quizCounter"></div>
+            <div class="completion-message" id="completionMsg">
+                🎉 Great job! You've completed all words!
+            </div>
+            <div class="question-box">
+                <div class="question-text" id="quizDefinition"></div>
+                <button class="replay-btn" onclick="replayAudio()">
+                    🔊 Replay
+                </button>
+            </div>
+            <div class="choices" id="choices"></div>
+            <div class="navigation">
+                <button class="nav-btn" id="quizPrev" onclick="navigateQuiz(-1)">⬅️ Previous</button>
+                <button class="nav-btn" id="quizNext" onclick="navigateQuiz(1)">Next ➡️</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let vocabulary = {};
+        let words = [];
+        let currentMode = null;
+        let currentIndex = 0;
+        let shuffledWords = [];
+        let currentAudioText = '';
+        let answeredQuestions = new Set();
+
+        // Load vocabulary data
+        async function loadVocabulary() {
+            try {
+                const response = await fetch('data.json');
+                vocabulary = await response.json();
+                words = Object.keys(vocabulary);
+                initializeApp();
+            } catch (error) {
+                console.error('Error loading vocabulary:', error);
+                alert('Error loading vocabulary data. Please make sure data.json is in the same folder.');
+            }
+        }
+
+        function initializeApp() {
+            // Shuffle words for random order
+            shuffledWords = [...words].sort(() => Math.random() - 0.5);
+        }
+
+        function selectMode(mode) {
+            currentMode = mode;
+            currentIndex = 0;
+            answeredQuestions.clear();
+            
+            // Update mode buttons
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Hide all quiz containers
+            document.querySelectorAll('.quiz-container').forEach(container => {
+                container.classList.remove('active');
+            });
+
+            // Show selected mode
+            if (mode === 'listen') {
+                document.getElementById('listenMode').classList.add('active');
+                showListenQuestion();
+            } else {
+                document.getElementById('quizMode').classList.add('active');
+                showQuizQuestion();
+            }
+        }
+
+        function showListenQuestion() {
+            if (shuffledWords.length === 0) return;
+
+            const word = shuffledWords[currentIndex];
+            const definition = vocabulary[word];
+
+            document.getElementById('listenWord').textContent = word;
+            document.getElementById('listenCounter').textContent = `Word ${currentIndex + 1} of ${shuffledWords.length}`;
+
+            // Update navigation buttons
+            document.getElementById('listenPrev').disabled = currentIndex === 0;
+            document.getElementById('listenNext').disabled = currentIndex === shuffledWords.length - 1;
+
+            // Speak the word
+            currentAudioText = word;
+            speakText(word);
+        }
+
+        function showQuizQuestion() {
+            if (shuffledWords.length === 0) return;
+
+            // Check if all questions answered
+            if (answeredQuestions.size === shuffledWords.length) {
+                document.getElementById('completionMsg').classList.add('show');
+            } else {
+                document.getElementById('completionMsg').classList.remove('show');
+            }
+
+            const correctWord = shuffledWords[currentIndex];
+            const definition = vocabulary[correctWord];
+
+            document.getElementById('quizDefinition').textContent = definition;
+            document.getElementById('quizCounter').textContent = `Question ${currentIndex + 1} of ${shuffledWords.length}`;
+
+            // Generate 4 choices (1 correct + 3 wrong)
+            const choices = generateChoices(correctWord);
+            displayChoices(choices, correctWord);
+
+            // Update navigation buttons
+            document.getElementById('quizPrev').disabled = currentIndex === 0;
+            document.getElementById('quizNext').disabled = currentIndex === shuffledWords.length - 1;
+
+            // Speak the definition
+            currentAudioText = definition;
+            speakText(definition);
+        }
+
+        function generateChoices(correctWord) {
+            const choices = [correctWord];
+            const otherWords = words.filter(w => w !== correctWord);
+            
+            // Add 3 random wrong answers
+            while (choices.length < 4 && otherWords.length > 0) {
+                const randomIndex = Math.floor(Math.random() * otherWords.length);
+                const randomWord = otherWords.splice(randomIndex, 1)[0];
+                choices.push(randomWord);
+            }
+
+            // Shuffle choices
+            return choices.sort(() => Math.random() - 0.5);
+        }
+
+        function displayChoices(choices, correctWord) {
+            const choicesContainer = document.getElementById('choices');
+            choicesContainer.innerHTML = '';
+
+            // Check if this question was already answered
+            const isAnswered = answeredQuestions.has(currentIndex);
+
+            choices.forEach(choice => {
+                const button = document.createElement('button');
+                button.className = 'choice-btn';
+                button.textContent = choice;
+                
+                if (isAnswered) {
+                    // Show the previous answer
+                    if (choice === correctWord) {
+                        button.classList.add('correct');
+                    }
+                    button.style.cursor = 'default';
+                } else {
+                    // Allow clicking
+                    button.onclick = () => selectAnswer(choice, correctWord, button);
+                }
+                
+                choicesContainer.appendChild(button);
+            });
+        }
+
+        function selectAnswer(selected, correct, button) {
+            // Mark as answered
+            answeredQuestions.add(currentIndex);
+
+            const allButtons = document.querySelectorAll('.choice-btn');
+            
+            // Disable all buttons
+            allButtons.forEach(btn => {
+                btn.style.cursor = 'default';
+                btn.onclick = null;
+            });
+
+            // Show correct/wrong
+            if (selected === correct) {
+                button.classList.add('correct');
+            } else {
+                button.classList.add('wrong');
+                // Highlight the correct answer
+                allButtons.forEach(btn => {
+                    if (btn.textContent === correct) {
+                        btn.classList.add('correct');
+                    }
+                });
+            }
+
+            // Check if all questions completed
+            if (answeredQuestions.size === shuffledWords.length) {
+                setTimeout(() => {
+                    document.getElementById('completionMsg').classList.add('show');
+                }, 500);
+            }
+        }
+
+        function navigateListen(direction) {
+            const newIndex = currentIndex + direction;
+            if (newIndex >= 0 && newIndex < shuffledWords.length) {
+                currentIndex = newIndex;
+                showListenQuestion();
+            }
+        }
+
+        function navigateQuiz(direction) {
+            const newIndex = currentIndex + direction;
+            if (newIndex >= 0 && newIndex < shuffledWords.length) {
+                currentIndex = newIndex;
+                showQuizQuestion();
+            }
+        }
+
+        function replayAudio() {
+            if (currentAudioText) {
+                speakText(currentAudioText);
+            }
+        }
+
+        function speakText(text) {
+            // Cancel any ongoing speech
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.9;
+            utterance.pitch = 1;
+            utterance.volume = 1;
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', loadVocabulary);
+    </script>
+</body>
+</html>
