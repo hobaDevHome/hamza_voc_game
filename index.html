@@ -286,6 +286,32 @@
           transform: translateX(100px) rotate(360deg);
         }
       }
+      .finish-btn {
+        background: #f44336;
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        transition: all 0.3s;
+        margin-bottom: 20px;
+        width: 100%;
+      }
+
+      .finish-btn:hover {
+        background: #d32f2f;
+        transform: translateY(-2px);
+      }
+
+      .quiz-content {
+        transition: all 0.3s;
+      }
+
+      .quiz-content.hidden {
+        display: none;
+      }
 
       @media (max-width: 600px) {
         .container {
@@ -343,15 +369,22 @@
       <!-- Quiz Mode -->
       <div id="quizMode" class="quiz-container">
         <div class="counter" id="quizCounter"></div>
-        <div class="completion-message" id="completionMsg">
-          🎉 Great job! You've completed all words!
+        <button class="finish-btn" onclick="finishQuiz()">
+          🏁 Finish Quiz & Show Results
+        </button>
+        <div class="quiz-content">
+          <div class="completion-message" id="completionMsg">
+            🎉 Great job! You've completed all words!
+          </div>
+          <!-- <div class="score-display" id="scoreDisplay"></div> -->
+          <div class="question-box">
+            <div class="question-text" id="quizDefinition"></div>
+            <button class="replay-btn" onclick="replayAudio()">
+              🔊 Replay
+            </button>
+          </div>
+          <div class="choices" id="choices"></div>
         </div>
-        <!-- <div class="score-display" id="scoreDisplay"></div> -->
-        <div class="question-box">
-          <div class="question-text" id="quizDefinition"></div>
-          <button class="replay-btn" onclick="replayAudio()">🔊 Replay</button>
-        </div>
-        <div class="choices" id="choices"></div>
         <div class="navigation">
           <button class="nav-btn" id="quizPrev" onclick="navigateQuiz(-1)">
             ⬅️ Previous
@@ -364,47 +397,54 @@
       <!-- Typing Mode -->
       <div id="typingMode" class="quiz-container">
         <div class="counter" id="typingCounter"></div>
-        <div class="completion-message" id="typingCompletionMsg">
-          🎉 Great job! You've completed all words!
-        </div>
-        <!-- <div class="score-display" id="typingScoreDisplay"></div> -->
-        <div class="question-box">
-          <div class="question-text" id="typingDefinition"></div>
-          <button class="replay-btn" onclick="replayAudio()">🔊 Replay</button>
-        </div>
-        <div style="margin-bottom: 25px">
-          <input
-            type="text"
-            id="typingInput"
-            placeholder="Type the word here..."
-            style="
-              width: 100%;
-              padding: 15px;
-              font-size: 18px;
-              border: 3px solid #667eea;
-              border-radius: 12px;
-              text-align: center;
-              outline: none;
-              margin-bottom: 15px;
-            "
-          />
-          <button
-            class="nav-btn"
-            id="checkAnswerBtn"
-            onclick="checkTypedAnswer()"
-            style="width: 100%; margin-bottom: 15px"
-          >
-            ✓ Check Answer
-          </button>
-          <div
-            id="typingFeedback"
-            style="
-              margin-top: 15px;
-              font-size: 20px;
-              font-weight: bold;
-              text-align: center;
-            "
-          ></div>
+        <button class="finish-btn" onclick="finishQuiz()">
+          🏁 Finish Quiz & Show Results
+        </button>
+        <div class="quiz-content">
+          <div class="completion-message" id="typingCompletionMsg">
+            🎉 Great job! You've completed all words!
+          </div>
+          <!-- <div class="score-display" id="typingScoreDisplay"></div> -->
+          <div class="question-box">
+            <div class="question-text" id="typingDefinition"></div>
+            <button class="replay-btn" onclick="replayAudio()">
+              🔊 Replay
+            </button>
+          </div>
+          <div style="margin-bottom: 25px">
+            <input
+              type="text"
+              id="typingInput"
+              placeholder="Type the word here..."
+              style="
+                width: 100%;
+                padding: 15px;
+                font-size: 18px;
+                border: 3px solid #667eea;
+                border-radius: 12px;
+                text-align: center;
+                outline: none;
+                margin-bottom: 15px;
+              "
+            />
+            <button
+              class="nav-btn"
+              id="checkAnswerBtn"
+              onclick="checkTypedAnswer()"
+              style="width: 100%; margin-bottom: 15px"
+            >
+              ✓ Check Answer
+            </button>
+            <div
+              id="typingFeedback"
+              style="
+                margin-top: 15px;
+                font-size: 20px;
+                font-weight: bold;
+                text-align: center;
+              "
+            ></div>
+          </div>
         </div>
         <div class="navigation">
           <button class="nav-btn" id="typingPrev" onclick="navigateTyping(-1)">
@@ -455,6 +495,12 @@
         document
           .querySelectorAll(".completion-message")
           .forEach((msg) => msg.classList.remove("show"));
+
+        // Show quiz content when changing modes
+        document.querySelectorAll(".quiz-content").forEach((content) => {
+          content.classList.remove("hidden");
+        });
+
         currentMode = mode;
         currentIndex = 0;
         answeredQuestions.clear();
@@ -820,6 +866,24 @@
         }
       }
 
+      function finishQuiz() {
+        // if (answeredQuestions.size === 0) {
+        //   alert("⚠️ You haven't answered any questions yet!");
+        //   return;
+        // }
+
+        // Hide quiz content
+        document.querySelectorAll(".quiz-content").forEach((content) => {
+          content.classList.add("hidden");
+        });
+
+        // Show results based on current mode
+        if (currentMode === "quiz") {
+          showResults();
+        } else if (currentMode === "typing") {
+          showTypingResults();
+        }
+      }
       function showTypingResults() {
         const totalQuestions = shuffledWords.length;
         const totalAttempts = correctAnswers + wrongAnswers;
